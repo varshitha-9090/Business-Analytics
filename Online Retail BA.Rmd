@@ -1,0 +1,266 @@
+---
+title: "Assignment_2BA"
+author: "phani varshitha"
+date: "2023-10-22"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+Online_Retail <- read.csv("C:/Users/varshitha/Downloads/Online_Retail (1).csv")
+library(dplyr)
+library(zoo)
+library(readxl)
+```
+
+---
+
+#Questions and Solutions
+  
+  
+```{r}
+#Solution-1
+total_countries=Online_Retail  %>% group_by(Country) %>% count(Country)
+
+percent_countries=Online_Retail %>% group_by(Country) %>% summarise(percent = 100* n()/nrow(Online_Retail))
+
+countries_filtered_percent=filter(percent_countries, percent>1)
+
+##Total Countries Count.
+total_countries
+
+##Percentage of Transactions which are greater than > 1.
+countries_filtered_percent
+```
+
+---
+
+```{r}
+#Solution-2
+TransactionValue=(Online_Retail$Quantity*Online_Retail$UnitPrice)
+
+#Addition of the Transaction Value column to the Online Retail table(import data).
+
+updated_data=cbind(Online_Retail,TransactionValue)
+
+##Note:The data which has transaction value column added named as updated_data.
+```
+
+---
+
+```{r}
+#Solution-3
+transaction_total=updated_data %>% group_by(Country) %>% summarise(sum=sum(TransactionValue))
+
+transaction_total_filtered= filter(transaction_total,transaction_total$sum>130000)
+
+#Total of Transaction value for Each Countries.
+transaction_total
+
+#Filtering the transactions which are greater than 130000.
+transaction_total_filtered
+```
+
+---
+
+```{r}
+#Solution-4
+Temp=strptime(updated_data$InvoiceDate,format='%m/%d/%Y %H:%M',tz='GMT')
+head(Temp)
+
+updated_data$New_Invoice_Date <- as.Date(Temp)
+
+updated_data$Invoice_Day_Week= weekdays(updated_data$New_Invoice_Date)
+
+updated_data$New_Invoice_Hour = as.numeric(format(Temp, "%H"))
+
+updated_data$New_Invoice_Month = as.numeric(format(Temp, "%m"))
+
+updated_data$New_Invoice_Date[20000]-updated_data$New_Invoice_Date[10]
+```
+
+---
+
+```{r}
+#Solution-4A
+#Percentage of number of transactions based on week days.
+days_week_count=updated_data %>% group_by(Invoice_Day_Week) %>% summarise(percent = 100* n()/nrow(Online_Retail))
+days_week_count
+```
+
+---
+
+```{r}
+#Solution-4B
+#Percentage of Transactions Value.
+days_week_sum = updated_data %>% group_by(Invoice_Day_Week) %>% summarise(sum=sum(TransactionValue))
+
+#Calculating the percentage for Transaction Value by week days.
+Week_quan_percent = 100*(days_week_sum$sum)/sum(days_week_sum$sum)
+
+#Replacing the sum with the percentage value.
+days_week_sum$sum = Week_quan_percent
+days_week_sum
+```
+
+---
+
+```{r}
+#Solution-4C
+#Percentage of Transactions Value by month of the year.
+Invoice_month_sum = updated_data %>% group_by(New_Invoice_Month) %>% summarise(sum=sum(TransactionValue))
+Month_quan_percent = 100*(Invoice_month_sum$sum)/sum(Invoice_month_sum$sum)
+Invoice_month_sum$sum = Month_quan_percent
+Invoice_month_sum
+```
+
+---
+
+```{r}
+#Solution-4d
+#Filtering the Australia's transactions based on New_Invoice_date.
+Australia_transaction = updated_data %>% filter(Country == "Australia") %>% group_by(New_Invoice_Date) %>% summarise(total=n())
+
+#Finding the date which has maximum number of transactions.
+Max_transaction_date = Australia_transaction[which.max(Australia_transaction$total),]
+Max_transaction_date
+```
+
+---
+
+```{r}
+#This Package is used for handling time-indexed data and is particularly useful when dealing with irregularly spaced time series.
+library(zoo)
+```
+
+---
+
+```{r}
+#Solution-4e
+#Filtering the transactions for the hours between 7:00 to 20:00.
+Sum_quan = updated_data %>% filter( New_Invoice_Hour >=7) %>% group_by(New_Invoice_Hour) %>% summarise(sum_val= sum(Quantity))
+
+#Adding the two consecutive rows.
+Con_sum=rollapply(Sum_quan$sum_val,2,sum)
+
+#Creating the maintenance column.
+maintainance=c(7:19)
+
+#creating the data frame for the maintenance and Con_sum.
+Main_table=data.frame(maintainance,Con_sum)
+
+#checking the minimum value of Con_sum and the hour where they can start maintenance.
+maintainance_hour=Main_table[which.min(Main_table$Con_sum),]
+maintainance_hour
+##From the above result we can say that At 19th Hour can start the maintenance.
+```
+
+---
+
+```{r}
+#Solution-5
+#Plotting graph between transaction value with the frequency for Germany country.
+Transaction_value_germany = filter(updated_data, updated_data$Country == "Germany")
+hist(Transaction_value_germany[["TransactionValue"]])
+```
+
+---
+
+```{r}
+#Solution-6
+#Removing the NA values in Customer ID Column.
+NA_custid=updated_data[!is.na(updated_data$CustomerID),]
+
+#Number of transactions with respect to Customer ID.
+Count_transactions_custid = NA_custid %>% group_by(CustomerID) %>% summarise(count=n())
+
+#printing the row which has max count of transactions.
+Max_Count_transactions= Count_transactions_custid[which.max(Count_transactions_custid$count),]
+
+# Adding the transaction value with respect to Customer ID.
+Sum_transactions_custid = NA_custid %>% group_by(CustomerID) %>% summarise(Numoftransactions=(sum(TransactionValue,na.rm = T)))
+
+#printing the row which has max sum of transaction value.
+Max_Sum_transactions= Sum_transactions_custid[which.max(Sum_transactions_custid$Numoftransactions),]
+Max_Count_transactions
+Max_Sum_transactions
+```
+
+---
+
+```{r}
+#Solution-7
+#Percentage of NA's for each column.
+NA_per_each = colMeans(is.na(updated_data))*100
+NA_per_each
+```
+
+---
+
+```{r}
+#Solution-8
+#Number of Transactions with customer ID missing.
+null_Custid = updated_data[is.na(updated_data$CustomerID),]
+
+# Segregating the missing CustomerID based on countries.
+table(null_Custid$Country)
+```
+
+---
+
+```{r}
+#Solution-9
+# Assuming the column name for customer ID is "CustomerID" and visit timestamp is "New_Invoice_Date"
+customer_data= updated_data %>%
+  arrange(CustomerID, New_Invoice_Date) %>%  # Sort by customer and timestamp
+  group_by(CustomerID) %>%
+  mutate(days_between_visits = c(NA, diff(New_Invoice_Date))) %>%
+  ungroup()
+head(customer_data)
+# Calculate the average time between consecutive visits for all customers
+average_days_between_visits <- mean(customer_data$days_between_visits, na.rm = TRUE)
+
+# Print the result
+cat("Average number of days between consecutive visits:", average_days_between_visits, "days\n")
+
+```
+
+---
+
+```{r}
+#Solution-10
+# Filtering the data set for french customers.
+French_customers = filter(updated_data,Country=="France" )
+
+#Return rate for the french customers.
+Return_rate = nrow(filter(French_customers,Quantity<1))/nrow(French_customers)
+Return_rate
+```
+
+---
+
+```{r}
+#Solution-11
+#revenue of each product.
+Product_revenue= updated_data %>% group_by(StockCode) %>% summarise(Sum_trnsvalue = sum(TransactionValue))
+
+#Selecting the product with highest revenue.
+Product_revenue[which.max(Product_revenue$Sum_trnsvalue),]
+
+```
+
+---
+
+```{r}
+#Solution-12
+#Number of unique customers.
+length(unique(updated_data$CustomerID))
+```
+
+
+  

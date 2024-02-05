@@ -1,0 +1,173 @@
+---
+title: "Assignment_3BA"
+author: "phani varshitha"
+date: "2023-11-02"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Run the following code in R-studio to create two variables X and Y. 
+
+set.seed(2017) 
+X=runif(100)*10 
+Y=X*4+3.45 
+Y=rnorm(100)*0.29*Y+Y 
+```
+# a)Plot Y against X.Based on the plot do you think we can fit a linear model to explain Y based on X?
+```{r}
+# Plot Y against X.
+
+plot(X,Y, main = "Plotting Y aginst X", xlab = "X axis", ylab = "Y axis",frame = FALSE)
+# Add regression line
+abline(lm(Y~X), col = "red")
+```
+
+# Interpretation:
+
+Based on the plot, we can conclude that Y and X have a positive linear relationship. Furthermore, the points closely follow the regression line and are evenly distributed across the area. However, there are a few outliers that I believe may affect the model's fit. However, a linear model is a good choice for explaining Y based on X.
+
+# b)Construct a simple linear model of Y based on X. Write the equation that explains Y based on X. What is the accuracy of this model?
+```{r}
+# Y=4.4655+3.6108*X
+# Accuracy is 0.6517 or 65%
+linear_mod <- lm(Y~X)
+summary(linear_mod)
+
+# Regression visualization
+plot(X, Y, xlab = "X axis", 
+     ylab = "Y axis",
+     main = "Regression Visualization")
+abline(4.4655, 3.6108, col = "red")
+```
+# Interpretation:
+
+The model's accuracy is 65%, which is relatively high because the p value is really small and close to zero, indicating that the relationship between both variables is quite significant and X (independent variable) has a significant influence on the value of Y (dependent variable). Furthermore, the difference between Multiple R-squared (0.6517) and Adjusted R-squared (0.6482) is very small, indicating that we chose the right variable and X will be able to determine the value of Y by 65%.
+
+# c)How  the  Coefficient  of  Determination,  R2,  of  the  model  above  is  related  to  the  correlation coefficient of X and Y? 
+```{r}
+cor(X,Y)^2
+
+```
+
+# Interpretation:
+
+As we can see above, the sum of both vales is 0.6517.This is because R2 quantifies the proportion of the variance in Y that can be explained by X, which is the same information that the correlation coefficient (r) captures.
+
+# Question 2:
+# a)James wants to buy a car. He and his friend, Chris, have different opinions about the Horse Power (hp) of cars. James think the weight of a car (wt) can be used to estimate the Horse Power of the car while Chris thinks the fuel consumption expressed in Mile Per Gallon (mpg), is a better estimator of the (hp). Who do you think is right? Construct simple linear models using mtcars data to answer the question. 
+```{r}
+head(mtcars)
+```
+
+Simple Linear model according to James
+```{r}
+plot(mtcars$wt, mtcars$hp, main = "J_model",
+     xlab = "wt", ylab = "hp",frame = FALSE)
+# Add regression line
+abline(lm(mtcars$hp ~ mtcars$wt), col = "blue")
+J_model <- lm(formula = hp~wt, data = mtcars)
+summary(J_model)
+# Accuracy of J_model is 0.4339
+```
+
+Simple Linear model according to Chris
+```{r}
+plot(mtcars$mpg, mtcars$hp, main = "C_model",
+     xlab = "mpg", ylab = "hp",frame = FALSE)
+# Add regression line
+abline(lm(mtcars$hp ~ mtcars$mpg), col = "blue")
+C_model <- lm(formula = hp~mpg, data = mtcars)
+summary(C_model)
+# Accuracy of C_model is 0.6024
+```
+
+# Interpretation:
+
+Based on the comparison above, we can conclude that Chris is correct about mpg being a better predictor of horsepower. This is because Chris's model has a higher r-squared value than James's model, implying that Chris's model is 60% more accurate than James's model (43%). Also, Chris's model has a p-value less than 0.05, indicating that there is a strong relationship between variables and that mpg has a statistically greater significant effect on hp than wt.
+
+
+# b)Build a model that uses the number of cylinders (cyl) and the mile per gallon (mpg) values of a car to predict the car Horse Power (hp). Using this model, what is the estimated Horse Power of a car with 4 calendar and mpg of 22? 
+```{r}
+H_model <- lm(formula = hp~cyl+mpg, data = mtcars)
+summary(H_model)
+Esti_hp <- predict(H_model,data.frame(cyl=4,mpg=22))
+Esti_hp
+```
+
+# Interpretation:
+
+The estimated Horse Power of a car with cyl = 4 and mpg = 22 is 88.93
+
+# Question 3
+```{r}
+library(mlbench)
+data("BostonHousing")
+View(BostonHousing)
+
+# Plotting all the variable using box plot to observe how the values of the various variables in the dataset have changed over time. 
+boxplot(BostonHousing[,c(1,2,4,11,14)])
+```
+
+# a) Build a model to estimate the median value of owner-occupied homes(medv) based on the following variables:crime crate (crim),proportion of residential land zoned for lots over 25,000 sq.ft(zn), the local  pupil-teacher ratio(ptratio) and weather the whether  the tract bounds Chas River(chas). Is this an accurate model?(Hint check R2 ) 
+```{r}
+set.seed(125)
+owner_model <- lm(formula = medv~crim+zn+ptratio+chas,data = BostonHousing)
+summary(owner_model)
+owner_model
+```
+
+# Interpretation:
+
+The model's accuracy is not particularly high, with an r-squared value of 35% and a residual error of 7.388, implying that the model's predictions are about 7.388 units off from the actual value, which is not a desirable characteristic of an accurate model. However, based on the p value and f-statistic, we can conclude that the model is statistically significant. To improve the accuracy, we simply need to include more variables that influence the median value of homes.
+
+# b) Use the estimated coefficient to answer these questions?  
+
+# I. Imagine two houses that are identical in all aspects but one bounds the Chas River and the other does not. Which one is more expensive and by how much? 
+
+Answer:
+
+ The estimated coefficient of chas1 is 4.58393. chas is the factor of two variable 0 and 1, one bound Chas River is 1 and if it doesn't it is 0. It is given that the median value of owner-occupied homes is 1000 dollars. when multiplied with coefficient(4.58393*1000), the result is 4583.93$ which is expensive.
+
+# II. Imagine two houses that are identical in all aspects but in the neighborhood of one of them the pupil-teacher ratio is 15 and in the other one is 18. Which one is more expensive and by how much? (Golden Question) 
+
+Answer:
+
+ It is clear that for every single unit increase in ptratio, price of houses is decreased by 1.49367 (i.e) 1493.67 (in thousands).If ptratio is 15, then it will be decrease of 15 * 1493.67= 22405.05. Likely, if ptratio is 18 then it will be a decrease of18*1493.67 = 26886.06. Finally, if ptratio of 15 expensive by $4481.01 when comapred to ptratio of 18. 
+
+# c) Which of the variables are statistically important (i.e. related to the house price)? Hint: use the p-values of the coefficients to answer. 
+
+Answer:
+
+ The P-values are not equal to 0. so, we can reject the null hypothesis and conclude that there is no relationship between house price and other factors in the model. Hence, each variable has statistical significance.
+ 
+# d) Use the anova analysis and determine the order of importance of these four variables. 
+```{r}
+anova(owner_model)
+```
+# Interpretation:
+
+ According to the F and p values, all predictors are statistically significant. However, we can compare the F values or the sum of squares to determine their relative importance:
+
+crim: F value of 118.007, sum of squares of 6440.8
+
+zn: has a F value of 65.122 and a sum of squares of 3554.3.
+
+ptratio: F value of 86.287 with a sum of squares of 4709.5
+
+chas: F value of 12.224, square sum of 667.2
+
+Crim has the highest F value and sum of squares, followed by ptratio, zn, and chas. In terms of explaining the variability in the median value of owner-occupied homes, this suggests that crim contributes the most to the model, followed by ptratio. zn also contributes significantly, while chas, while statistically significant, contributes the least in terms of the sum of squares.
+
+         crim>ptratio>zn>chas
+
+
+In conclusion, crim appears to be the most important variable in the model, followed by ptratio, zn, and chas, in that order, based on the ANOVA table.
+
+
+ 
